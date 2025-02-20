@@ -1,0 +1,5 @@
+launch/*
+ros_nodes_graph*
+*.pdf
+*.dot
+
