@@ -361,12 +361,40 @@ class LaunchAnalyzer:
 
         # launchファイル間の依存関係を追加
         print(f"\n🎯 依存関係の追加:")
+
+        # 重複を防ぐために追加済みのエッジを記録
+        added_edges = set()
+        # ノードペアを記録（方向を無視）
+        node_pairs = set()
+
         for launch_file, includes in self.launch_dependencies.items():
             launch_base = os.path.basename(launch_file)
             for included, _ in includes:
                 included_base = os.path.basename(included)
+
+                # エッジの識別子を作成
+                edge_id = f"{launch_base}|{included_base}"
+
+                # ノードペアを作成（ソートして方向を無視）
+                node_pair = tuple(sorted([launch_base, included_base]))
+
+                # 既に追加済みのエッジはスキップ
+                if edge_id in added_edges:
+                    print(f"   🔄 重複エッジをスキップ: {launch_base} -> {included_base}")
+                    continue
+
+                # 同じノードペア間に既にエッジがある場合はスキップ
+                if node_pair in node_pairs:
+                    print(f"   🔄 重複ノードペアをスキップ: {launch_base} <-> {included_base}")
+                    continue
+
                 print(f"   ➡️  {launch_base} -> {included_base}")
                 dot.edge(launch_base, included_base, style='dashed', color='red')
+
+                # 追加済みエッジとして記録
+                added_edges.add(edge_id)
+                # ノードペアを記録
+                node_pairs.add(node_pair)
 
         # グラフの保存
         try:
@@ -515,6 +543,11 @@ class LaunchAnalyzer:
         print("\n🔗 依存関係の追加:")
         edge_count = 0
 
+        # 重複を防ぐために追加済みのエッジを記録
+        added_edges = set()
+        # ノードペアを記録（方向を無視）
+        node_pairs = set()
+
         # クラスタ間の依存関係を追加
         for launch_file, includes in self.launch_dependencies.items():
             if launch_file not in cluster_mapping:
@@ -531,6 +564,22 @@ class LaunchAnalyzer:
                 dst_id = cluster_mapping[included]
                 dst_cluster = f"cluster_{dst_id}"
                 dst_dummy = f"dummy_{dst_id}"
+
+                # エッジの識別子を作成
+                edge_id = f"{src_cluster}|{dst_cluster}"
+
+                # ノードペアを作成（ソートして方向を無視）
+                node_pair = tuple(sorted([src_cluster, dst_cluster]))
+
+                # 既に追加済みのエッジはスキップ
+                if edge_id in added_edges:
+                    print(f"   🔄 重複エッジをスキップ: {os.path.basename(launch_file)} -> {os.path.basename(included)}")
+                    continue
+
+                # 同じノードペア間に既にエッジがある場合はスキップ
+                if node_pair in node_pairs:
+                    print(f"   🔄 重複ノードペアをスキップ: {os.path.basename(launch_file)} <-> {os.path.basename(included)}")
+                    continue
 
                 edge_count += 1
                 print(f"   ➡️  エッジ {edge_count}:")
@@ -549,6 +598,43 @@ class LaunchAnalyzer:
                     style='dashed',     # 破線に変更
                     color='red'         # 赤色に変更
                 )
+
+                # 追加済みエッジとして記録
+                added_edges.add(edge_id)
+                # ノードペアを記録
+                node_pairs.add(node_pair)
+
+        # ノード間のトピック依存関係を追加
+        print(f"\n🔄 トピック依存関係の追加:")
+        topic_edges = set()  # トピック依存関係の重複を防ぐ
+        # ノードペアを記録（方向を無視）
+        topic_node_pairs = set()
+
+        for node_name, info in self.nodes.items():
+            for pub in info.get('publishes', []):
+                for sub_node, sub_info in self.nodes.items():
+                    if node_name != sub_node and pub in sub_info.get('subscribes', []):
+                        # エッジの識別子を作成
+                        edge_id = f"{node_name}|{sub_node}|{pub}"
+
+                        # ノードペアを作成（ソートして方向を無視）
+                        node_pair = tuple(sorted([node_name, sub_node]))
+
+                        # 既に追加済みのエッジはスキップ
+                        if edge_id in topic_edges:
+                            print(f"   🔄 重複トピックエッジをスキップ: {node_name} -> {sub_node} ({pub})")
+                            continue
+
+                        # 同じノードペア間に既にエッジがある場合はスキップ
+                        if node_pair in topic_node_pairs:
+                            print(f"   🔄 重複ノードペアをスキップ: {node_name} <-> {sub_node}")
+                            continue
+
+                        print(f"   ➡️  {node_name} -> {sub_node} ({pub})")
+                        dot.edge(node_name, sub_node, label=pub, fontsize='8')
+                        topic_edges.add(edge_id)
+                        # ノードペアを記録
+                        topic_node_pairs.add(node_pair)
 
         # グラフの保存
         print("\n💾 グラフの保存:")
