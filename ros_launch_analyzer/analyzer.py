@@ -1,37 +1,35 @@
 #!/usr/bin/env python3
+"""
+ROSのlaunchファイルを解析し、依存関係グラフを生成するモジュール
+"""
+
 import os
+import re
+import glob
 import xml.etree.ElementTree as ET
 import graphviz
-import argparse
-from typing import Dict, Set, Tuple, List
-import glob
-import re
+import hashlib
+from pathlib import Path
 
 class LaunchAnalyzer:
+    """ROSのlaunchファイルを解析するクラス"""
+
     def __init__(self, launch_dir: str, ros_ws_dir: str = ""):
-        """
+        """初期化
+
         Args:
-            launch_dir (str): launchファイルのディレクトリパス
-            ros_ws_dir (str): ROSのワークスペースディレクトリパス
+            launch_dir (str): launchファイルのディレクトリ
+            ros_ws_dir (str, optional): ROSワークスペースのディレクトリ. Defaults to "".
         """
-        if ros_ws_dir == "":
-            # ホームディレクトリ配下のcatkin_wsを探索
-            home = os.path.expanduser('~')
-            self.ros_ws_dir = os.path.join(home, 'catkin_ws')
-        else:
-            self.ros_ws_dir = os.path.expanduser(ros_ws_dir)
-        self.launch_dir = launch_dir
-        self.nodes: Dict[str, Dict[str, str]] = {}  # {node_name: {pkg, type}}
-        self.dependencies: Set[Tuple[str, str]] = set()  # (from_node, to_node)
-        # {launch_file: [(included_file, package_name), ...]}
-        self.launch_dependencies: Dict[str, List[Tuple[str, str]]] = {}
-        self.current_launch_file = ""
-        # パッケージキャッシュ
-        self.pkg_cache: Dict[str, str] = {}
-        # クラスタIDキャッシュ
-        self.cluster_id_cache: Dict[str, str] = {}
-        # 追加済みエッジの記録
-        self.added_edges: Set[Tuple[str, str]] = set()
+        self.launch_dir = os.path.abspath(launch_dir)
+        self.ros_ws_dir = ros_ws_dir if ros_ws_dir else os.path.expanduser("~/catkin_ws")
+        self.launch_dependencies = {}  # launchファイルの依存関係
+        self.nodes = {}  # ノード情報
+        self.pkg_path_cache = {}  # パッケージパスのキャッシュ
+        self.cluster_id_cache = {}  # クラスタIDのキャッシュ
+
+        print(f"🔍 ROSワークスペース: {self.ros_ws_dir}")
+        print(f"📂 launchディレクトリ: {self.launch_dir}")
 
     def _generate_cluster_id(self, launch_file: str) -> str:
         """一貫性のあるクラスタIDを生成
@@ -72,9 +70,9 @@ class LaunchAnalyzer:
             str: パッケージのパス。見つからない場合は空文字列
         """
         # キャッシュにあればそれを返す
-        if pkg_name in self.pkg_cache:
+        if pkg_name in self.pkg_path_cache:
             print(f"      💾 キャッシュからパッケージパスを取得: {pkg_name}")
-            return self.pkg_cache[pkg_name]
+            return self.pkg_path_cache[pkg_name]
 
         print(f"      🔍 パッケージを検索: {pkg_name}")
 
@@ -96,7 +94,7 @@ class LaunchAnalyzer:
         if valid_paths:
             pkg_path = valid_paths[0]  # 最初に見つかったものを使用
             print(f"      ✅ 有効なパッケージを発見: {pkg_path}")
-            self.pkg_cache[pkg_name] = pkg_path  # キャッシュに保存
+            self.pkg_path_cache[pkg_name] = pkg_path  # キャッシュに保存
             return pkg_path
 
         print(f"      ❌ 有効なパッケージが見つかりません: {pkg_name}")
@@ -191,7 +189,6 @@ class LaunchAnalyzer:
 
         abs_launch_file = os.path.abspath(launch_file)
         print(f"\n🔍 解析開始: {abs_launch_file}")
-        self.current_launch_file = abs_launch_file
 
         # 新規ファイルの場合のみ初期化
         if abs_launch_file not in self.launch_dependencies:
@@ -273,35 +270,33 @@ class LaunchAnalyzer:
             print(f"\n   ✨ includeタグの解析完了")
 
             # nodeタグの解析
-            self._parse_nodes(root)
+            self._parse_nodes(root, launch_file=abs_launch_file)
 
         except ET.ParseError as e:
             print(f"❌ エラー: launchファイルの解析に失敗しました: {abs_launch_file}")
             print(f"   詳細: {str(e)}")
 
-    def _parse_nodes(self, element: ET.Element, namespace: str = "") -> None:
-        """再帰的にノードを解析
+    def _parse_nodes(self, element: ET.Element, namespace: str = "", launch_file: str = None) -> None:
+        """ノード情報を抽出
 
         Args:
-            element (ET.Element): 解析対象のXML要素
-            namespace (str): 現在の名前空間
+            element (ET.Element): XMLの要素
+            namespace (str, optional): 名前空間. Defaults to "".
+            launch_file (str, optional): launchファイルのパス. Defaults to None.
         """
-        # グループの名前空間を処理
-        ns = element.get('ns', '')
-        if ns:
-            namespace = f"{namespace}/{ns}" if namespace else ns
-
-        # ノードの処理
+        # nodeタグの処理
         for node in element.findall('.//node'):
-            pkg = node.get('pkg', '')
-            type_ = node.get('type', '')
-            name = node.get('name', '')
+            pkg = node.get('pkg')
+            type_ = node.get('type')
+            name = node.get('name')
+            if namespace and not name.startswith('/'):
+                name = f"{namespace}/{name}"
             if pkg and type_ and name:
-                full_name = f"{namespace}/{name}" if namespace else name
-                self.nodes[full_name] = {
+                print(f"      ➕ ノード検出: {name} ({pkg}/{type_})")
+                self.nodes[name] = {
                     'pkg': pkg,
                     'type': type_,
-                    'launch_file': self.current_launch_file
+                    'launch_file': launch_file
                 }
 
     def create_simple_graph(self, output_file: str) -> None:
@@ -666,59 +661,3 @@ class LaunchAnalyzer:
         """
         self.create_simple_graph(output_file)
         self.create_full_graph(output_file)
-
-def main():
-    parser = argparse.ArgumentParser(description='ROSのlaunchファイルを解析してノードの依存関係をグラフ化')
-    parser.add_argument('path', help='launchファイルまたはディレクトリのパス')
-    parser.add_argument('--ros-ws', default='~/catkin_ws', help='ROSのワークスペースディレクトリパス')
-    parser.add_argument('-o', '--output', default='ros_nodes_graph', help='出力ファイル名（拡張子なし）')
-    args = parser.parse_args()
-
-    analyzer = LaunchAnalyzer(os.path.dirname(args.path) if os.path.isfile(args.path) else args.path, args.ros_ws)
-
-    if os.path.isfile(args.path):
-        # 単一のファイルを解析
-        if args.path.endswith('.launch'):
-            analyzer.parse_launch_file(args.path)
-        else:
-            print(f"❌ エラー: 指定されたファイルはlaunchファイルではありません: {args.path}")
-            return
-    else:
-        # ディレクトリ内のすべてのlaunchファイルを解析
-        for root, _, files in os.walk(args.path):
-            for file in files:
-                if file.endswith('.launch'):
-                    launch_file = os.path.join(root, file)
-                    analyzer.parse_launch_file(launch_file)
-
-    # 単一ファイルの場合は、そのファイルに関連するノードのみを含むグラフを生成
-    if os.path.isfile(args.path):
-        target_file = os.path.abspath(args.path)
-        # 関連するファイルのみを抽出
-        related_files = {target_file}
-        for launch_file, includes in analyzer.launch_dependencies.items():
-            if launch_file == target_file:
-                related_files.update(inc for inc, _ in includes)
-            else:
-                for inc, _ in includes:
-                    if inc == target_file:
-                        related_files.add(launch_file)
-                        related_files.add(inc)
-
-        # 関連しないファイルを削除
-        analyzer.launch_dependencies = {
-            k: [(f, p) for f, p in v if f in related_files]
-            for k, v in analyzer.launch_dependencies.items()
-            if k in related_files
-        }
-
-        # 関連しないノードを削除
-        analyzer.nodes = {
-            name: info for name, info in analyzer.nodes.items()
-            if info['launch_file'] in related_files
-        }
-
-    analyzer.create_graph(args.output)
-
-if __name__ == '__main__':
-    main()
