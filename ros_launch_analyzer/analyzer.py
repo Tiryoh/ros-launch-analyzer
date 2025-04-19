@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 ROSのlaunchファイルを解析し、依存関係グラフを生成するモジュール
+
+SPDX-License-Identifier: MIT
+(C) 2025 Daisuke Sato
 """
 
 import os

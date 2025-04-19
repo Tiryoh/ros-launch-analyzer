@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 ROSのlaunchファイル解析ツールのコマンドラインインターフェース
+
+SPDX-License-Identifier: MIT
+(C) 2025 Daisuke Sato
 """
 
 import argparse

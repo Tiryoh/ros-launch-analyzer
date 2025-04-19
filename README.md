@@ -69,3 +69,7 @@ dotファイルは[xdot](https://github.com/jrfonseca/xdot.py)や[VSCodeの拡�
 
 - Python 3.8以上
 - Graphviz（システムにインストールされている必要があります）
+
+## ライセンス
+
+本プロジェクトは[MITライセンス](LICENSE)のもとで公開されています。
