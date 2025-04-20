@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find pkg_b)/launch/child.launch" />
+  <node name="parent_node" pkg="pkg_a" type="type_parent" />
+</launch>

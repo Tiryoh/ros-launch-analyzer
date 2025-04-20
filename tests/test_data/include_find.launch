@@ -1,0 +1,5 @@
+
+<launch>
+  <include file="$(find pkg_a)/launch/a_node.launch" />
+  <node name="finder_node" pkg="pkg_finder" type="type_finder" />
+</launch>

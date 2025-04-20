@@ -1,0 +1,4 @@
+
+<launch>
+  <node name="simple_node" pkg="pkg_simple" type="type_simple" />
+</launch>

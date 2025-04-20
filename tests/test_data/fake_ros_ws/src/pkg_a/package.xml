@@ -1,0 +1,5 @@
+
+<package format="2">
+  <name>pkg_a</name><version>0.0.0</version><description>Test package A</description>
+  <maintainer email="test@example.com">Test User</maintainer><license>MIT</license>
+</package>
