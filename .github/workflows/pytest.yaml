@@ -2,16 +2,20 @@ name: pytest
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '**/*.py'
       - 'poetry.lock'
       - 'pyproject.toml'
+      - 'tests/**'
       - '.github/workflows/pytest.yaml'
   pull_request:
     paths:
       - '**/*.py'
       - 'poetry.lock'
       - 'pyproject.toml'
+      - 'tests/**'
       - '.github/workflows/pytest.yaml'
 
 jobs:
