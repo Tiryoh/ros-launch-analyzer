@@ -89,6 +89,13 @@ dotファイルは[xdot](https://github.com/jrfonseca/xdot.py)や[VSCodeの拡�
 - `ros_nodes_graph_nodes.csv`
   - launchファイルのノード名とパッケージ名を出力したCSVファイル
 
+### mycobot_rosを解析した結果
+
+simpleグラフ
+![Image](https://github.com/user-attachments/assets/9bf40e5f-a1ca-45ce-99e6-eadc0f750656)
+
+fullグラフ
+![Image](https://github.com/user-attachments/assets/b1da58d3-14cd-41f2-b89f-9d8559864731)
 
 ## 必要条件
 
