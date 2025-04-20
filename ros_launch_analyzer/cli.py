@@ -9,6 +9,7 @@ SPDX-License-Identifier: MIT
 import argparse
 import os
 import sys
+
 from .analyzer import LaunchAnalyzer
 
 
