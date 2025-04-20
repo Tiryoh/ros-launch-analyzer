@@ -27,7 +27,32 @@ pip install ros-launch-analyzer
 ### CLIとして
 
 ```sh-session
-$ ros-launch-analyzer <launchファイル（ディレクトリ）のパス> [--output <出力ファイル名>] [--ros-ws <ROSワークスペースのパス>]
+$ ros-launch-analyzer <launchファイルまたはディレクトリのパス> [--output <出力ファイル名>] [--ros-ws <ROSワークスペースのパス>]
+```
+
+**解析対象の指定について:**
+
+*   **ディレクトリを指定した場合:**
+    指定されたディレクトリ以下の全ての `.launch` および `.launch.xml` ファイルを再帰的に検索し、それらのファイル間の依存関係（`<include>` タグによる参照）を全て解析します。間接的な依存関係も含まれます。
+    ```sh-session
+    # 例: mycobot_gazebo パッケージの launch ディレクトリ全体を解析
+    $ ros-launch-analyzer catkin_ws/src/mycobot_ros/mycobot_gazebo/launch --ros-ws "$(pwd)/catkin_ws"
+    ```
+
+*   **単一のlaunchファイルを指定した場合:**
+    指定された launch ファイルと、そのファイルが **直接 `<include>` タグで参照している launch ファイルのみ** を対象として解析し、グラフを生成します。指定ファイルから見て2階層目以降の間接的な依存関係はグラフに含まれません。これは、特定のファイル周辺の直接的な依存関係に絞って確認したい場合に便利です。
+    ```sh-session
+    # 例: demo.launch とそれが直接 include するファイルのみを解析
+    $ ros-launch-analyzer catkin_ws/src/mycobot_ros/mycobot_move_it_config/launch/demo.launch --ros-ws "$(pwd)/catkin_ws"
+    ```
+
+mycobot_rosのlaunchファイルを解析する例 (ディレクトリ指定)
+
+```sh-session
+$ cd /tmp
+$ mkdir -p catkin_ws/src
+$ git clone https://github.com/Tiryoh/mycobot_ros.git catkin_ws/src/mycobot_ros
+$ ros-launch-analyzer catkin_ws/src/mycobot_ros/mycobot_gazebo/launch --ros-ws "$(pwd)/catkin_ws"
 ```
 
 ### Pythonモジュールとして
