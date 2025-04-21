@@ -76,7 +76,8 @@ analyzer.create_full_graph("output_filename")    # 詳細グラフのみ
 ## 出力
 
 以下のファイルを生成し出力します。  
-dotファイルは[xdot](https://github.com/jrfonseca/xdot.py)や[VSCodeの拡張機能（Graphviz Interactive Preview）](https://marketplace.visualstudio.com/items?itemName=tintinweb.graphviz-interactive-preview)などで表示できます。
+dotファイルは[xdot](https://github.com/jrfonseca/xdot.py)や[VSCodeの拡張機能（Graphviz Interactive Preview）](https://marketplace.visualstudio.com/items?itemName=tintinweb.graphviz-interactive-preview)などで表示できます。  
+生成されたファイルはClaudeなどでdrawioのフォーマットに変換して使用すると便利です。
 
 - `ros_nodes_graph_simple.dot`
   - launchファイルの依存関係を表すGraphvizのdotファイル
@@ -91,11 +92,14 @@ dotファイルは[xdot](https://github.com/jrfonseca/xdot.py)や[VSCodeの拡�
 
 ### mycobot_rosを解析した結果
 
-simpleグラフ
+simpleグラフ  
 ![Image](https://github.com/user-attachments/assets/9bf40e5f-a1ca-45ce-99e6-eadc0f750656)
 
-fullグラフ
+fullグラフ  
 ![Image](https://github.com/user-attachments/assets/b1da58d3-14cd-41f2-b89f-9d8559864731)
+
+simpleグラフをdrawioのフォーマット（[flow.drawio.txt](https://github.com/user-attachments/files/19829833/flow.drawio.txt)）に変換したもの  
+![Image](https://github.com/user-attachments/assets/24e8202d-6d9d-4899-ae57-28c519b77263)
 
 ## 必要条件
 
