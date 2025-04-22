@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ros-launch-analyzer"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Daisuke Sato <tiryoh@gmail.com>"]
 readme = "README.md"
