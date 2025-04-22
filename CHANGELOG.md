@@ -2,6 +2,16 @@
 ## [Unreleased]
 
 
+<a name="v0.1.1"></a>
+## [v0.1.1] - 2025-04-22
+### Chore
+- Downgrade dependencies to support Python 3.8 ([#2](https://github.com/Tiryoh/ros-launch-analyzer/issues/2))
+
+
+[Unreleased]: https://github.com/Tiryoh/ros-launch-analyzer/compare/v0.1.1...HEAD
+[v0.1.1]: https://github.com/Tiryoh/ros-launch-analyzer/compare/v0.1.0...v0.1.1
+
+
 <a name="v0.1.0"></a>
 ## v0.1.0 - 2025-04-22
 ### Chore
@@ -32,4 +42,3 @@
 - Fix format
 
 
-[Unreleased]: https://github.com/Tiryoh/ros-launch-analyzer/compare/v0.1.0...HEAD
